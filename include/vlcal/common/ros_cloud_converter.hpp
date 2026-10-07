@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vector>
+#include <algorithm>
 #include <iostream>
 #include <boost/format.hpp>
 
@@ -138,6 +139,12 @@ static RawPoints::Ptr extract_raw_points(const PointCloud2& points_msg, const st
           std::cerr << "warning: unsupported time type " << time_type << std::endl;
           return nullptr;
       }
+    }
+
+    // Some drivers (e.g., Hesai XYZIRCAEDT output) publish an all-zero time field.
+    // Treat it as missing so that TimeKeeper assigns pseudo per-point timestamps based on the point order.
+    if (std::all_of(times.begin(), times.end(), [](const double t) { return t == 0.0; })) {
+      times.clear();
     }
   }
 
